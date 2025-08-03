@@ -111,10 +111,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // 更新整个棋盘状态
-            updateBoard(data.board);
+        updateBoard(data.board);
 
-            // 更新当前玩家
-            currentPlayer = data.current_player;
+        // 更新胜率显示
+        if (data.player_win_rate !== undefined && data.ai_win_rate !== undefined) {
+            updateWinRates(data.player_win_rate, data.ai_win_rate);
+        }
+
+        // 更新当前玩家
+        currentPlayer = data.current_player;
             
             if (data.game_over) {
                 gameOver = true;
@@ -230,6 +235,21 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error initializing game:', error);
             updateStatus('Failed to initialize game: ' + (error.message || 'Unknown error'));
         }
+    }
+
+    // 更新胜率显示
+    function updateWinRates(humanRate, aiRate) {
+        // 转换为百分比
+        const humanPercent = Math.round(humanRate * 100);
+        const aiPercent = Math.round(aiRate * 100);
+
+        // 更新进度条
+        document.getElementById('human-rate-bar').style.width = `${humanPercent}%`;
+        document.getElementById('ai-rate-bar').style.width = `${aiPercent}%`;
+
+        // 更新百分比文本
+        document.getElementById('human-rate-value').textContent = `${humanPercent}%`;
+        document.getElementById('ai-rate-value').textContent = `${aiPercent}%`;
     }
 
     // 初始化

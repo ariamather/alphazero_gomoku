@@ -98,6 +98,55 @@ canvas#gomoku-board {
     width: 25px;
     background-color: #eee;
     border-radius: 50%;
+}
+
+/* 胜率显示样式 */
+.win-rates {
+    margin-top: 20px;
+}
+
+.rate-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.rate-label {
+    width: 100px;
+    font-weight: bold;
+    color: #555;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 15px;
+    background-color: #eee;
+    border-radius: 10px;
+    margin: 0 10px;
+    overflow: hidden;
+}
+
+.rate-bar {
+    height: 100%;
+    width: 0%;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+#human-rate-bar {
+    background-color: #4CAF50;
+}
+
+#ai-rate-bar {
+    background-color: #2196F3;
+}
+
+.rate-value {
+    width: 40px;
+    text-align: right;
+    font-weight: bold;
+    color: #555;
+}
     transition: all 0.3s ease;
 }
 

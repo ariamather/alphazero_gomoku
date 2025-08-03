@@ -20,6 +20,9 @@ from mcts import MCTS
 app = Flask(__name__)
 
 # --- 全局变量和模型加载 ---
+# 用于胜率计算的缩放因子
+WIN_RATE_SCALE = 0.5
+WIN_RATE_BIAS = 0.5
 BOARD_SIZE = 12
 N_MCTS_SIMS = 400 # 为加快响应速度，可以减少模拟次数
 
@@ -113,16 +116,37 @@ def make_move():
     print(f"Player {env.current_player} moving to action {player_action}")
     env.step(player_action)
     
+    # 计算玩家移动后的胜率
+    player_observation = env._get_observation()
+    player_obs_tensor = torch.tensor(player_observation, dtype=torch.float32).unsqueeze(0).to(device)
+    with torch.no_grad():
+        _, player_value = net(player_obs_tensor)
+    # 将value转换为胜率 [0, 1]
+    player_win_rate = player_value.item() * WIN_RATE_SCALE + WIN_RATE_BIAS
+    
     # 检查游戏是否结束（玩家获胜）
     if env.is_game_over():
         game_over = True
         winner = env.winner.value if env.winner else 0
         print(f"Game over after player move. Winner: {winner}")
+        # 根据游戏结果设置胜率
+        if winner == 1:  # 人类获胜
+            player_win_rate = 1.0
+            ai_win_rate = 0.0
+        elif winner == -1:  # AI获胜
+            player_win_rate = 0.0
+            ai_win_rate = 1.0
+        else:  # 平局
+            player_win_rate = 0.5
+            ai_win_rate = 0.5
+        
         response = {
             'board': env.board.tolist(),
             'ai_action': -1,
             'game_over': game_over,
-            'winner': winner
+            'winner': winner,
+            'player_win_rate': player_win_rate,
+            'ai_win_rate': ai_win_rate
         }
         return jsonify(response)
     
@@ -164,12 +188,31 @@ def make_move():
     # 执行AI的移动
     env.step(ai_action)
     
+    # 计算AI移动后的胜率
+    ai_observation = env._get_observation()
+    ai_obs_tensor = torch.tensor(ai_observation, dtype=torch.float32).unsqueeze(0).to(device)
+    with torch.no_grad():
+        _, ai_value = net(ai_obs_tensor)
+    # 注意：AI的value是从AI的角度评估的，所以人类的胜率需要反转
+    ai_win_rate = ai_value.item() * WIN_RATE_SCALE + WIN_RATE_BIAS
+    player_win_rate = 1.0 - ai_win_rate
+    
     # 检查游戏是否结束
     game_over = env.is_game_over()
     winner = env.winner.value if env.winner else 0
     
     if game_over:
         print(f"Game over after AI move. Winner: {winner}")
+        # 根据游戏结果校正胜率
+        if winner == 1:  # 人类获胜
+            player_win_rate = 1.0
+            ai_win_rate = 0.0
+        elif winner == -1:  # AI获胜
+            player_win_rate = 0.0
+            ai_win_rate = 1.0
+        else:  # 平局
+            player_win_rate = 0.5
+            ai_win_rate = 0.5
 
     # 确定当前玩家：AI走棋后，当前玩家应该是人类
     current_player = 1  # 人类玩家
@@ -179,7 +222,9 @@ def make_move():
         'ai_action': int(ai_action),
         'game_over': game_over,
         'winner': winner,
-        'current_player': current_player
+        'current_player': current_player,
+        'player_win_rate': player_win_rate,
+        'ai_win_rate': ai_win_rate
     }
     return jsonify(response)
 

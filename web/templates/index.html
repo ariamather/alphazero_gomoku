@@ -25,6 +25,22 @@
             </div>
             <button id="reset-button">New Game</button>
             <p id="game-status">Your turn (Black)</p>
+            <div class="win-rates">
+                <div class="rate-container">
+                    <span class="rate-label">Human Win Rate:</span>
+                    <div class="progress-bar">
+                        <div id="human-rate-bar" class="rate-bar"></div>
+                    </div>
+                    <span id="human-rate-value" class="rate-value">0%</span>
+                </div>
+                <div class="rate-container">
+                    <span class="rate-label">AI Win Rate:</span>
+                    <div class="progress-bar">
+                        <div id="ai-rate-bar" class="rate-bar"></div>
+                    </div>
+                    <span id="ai-rate-value" class="rate-value">0%</span>
+                </div>
+            </div>
         </div>
     </div>
     <script src="{{ url_for('static', filename='main.js') }}"></script>
