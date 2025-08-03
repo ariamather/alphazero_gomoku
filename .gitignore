@@ -1,0 +1,8 @@
+# Ignore all .pt files in checkpoints directory
+checkpoints/**/*.pt
+
+# Ignore .pt files in root directory
+best.pt
+best_fixed.pt
+checkpoint_60.pt
+temp_net_for_selfplay.pt

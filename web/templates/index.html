@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gomoku AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Gomoku AI</h1>
+    <div class="game-container">
+        <canvas id="gomoku-board" width="600" height="600"></canvas>
+        <div class="controls">
+            <button id="reset-button">New Game</button>
+            <p id="game-status">Your turn (Black)</p>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>

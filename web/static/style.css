@@ -1,0 +1,51 @@
+body {
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #f0f0f0;
+    margin: 0;
+}
+
+h1 {
+    color: #333;
+}
+
+.game-container {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    margin-top: 20px;
+}
+
+canvas#gomoku-board {
+    background-color: #f3d19c;
+    border: 2px solid #333;
+    cursor: pointer;
+}
+
+.controls {
+    margin-left: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+#reset-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    margin-bottom: 20px;
+}
+
+#reset-button:hover {
+    background-color: #eee;
+}
+
+#game-status {
+    font-size: 18px;
+    font-weight: bold;
+    color: #444;
+}
