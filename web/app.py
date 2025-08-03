@@ -171,11 +171,15 @@ def make_move():
     if game_over:
         print(f"Game over after AI move. Winner: {winner}")
 
+    # 确定当前玩家：AI走棋后，当前玩家应该是人类
+    current_player = 1  # 人类玩家
+    
     response = {
         'board': env.board.tolist(),
         'ai_action': int(ai_action),
         'game_over': game_over,
-        'winner': winner
+        'winner': winner,
+        'current_player': current_player
     }
     return jsonify(response)
 
@@ -183,9 +187,37 @@ def make_move():
 def init_game():
     try:
         print("Initializing new game")  # 调试输出
+        starting_player = request.args.get('starting_player', 'human')  # 默认人类先手
+        
         env.reset()
         mcts.reset()
-        current_player = env.current_player.value
+        
+        # 如果选择AI先手，设置当前玩家为AI并让AI下第一步
+        if starting_player == 'ai':
+            print("AI starts first")
+            # 获取当前观察状态
+            observation = env._get_observation()
+            
+            # 运行MCTS获取访问次数
+            visits = mcts.run(env, observation)
+            
+            # 选择访问次数最多的动作
+            ai_action = np.argmax(visits)
+            
+            ai_row = ai_action // BOARD_SIZE
+            ai_col = ai_action % BOARD_SIZE
+            print(f"AI moving to ({ai_row}, {ai_col}), action {ai_action}")
+            
+            # 执行AI的移动
+            env.step(ai_action)
+        
+        # 确定当前玩家
+        # 如果AI先手并已下了一步，当前玩家应该是人类
+        if starting_player == 'ai':
+            current_player = 1  # 人类玩家
+        else:
+            current_player = env.current_player.value
+        
         board_list = env.board.tolist()
         print(f"Init successful: current_player={current_player}, board_size={len(board_list)}")  # 调试输出
         return jsonify({

@@ -11,6 +11,18 @@
     <div class="game-container">
         <canvas id="gomoku-board" width="600" height="600"></canvas>
         <div class="controls">
+            <div class="player-selection">
+                <label>
+                    <input type="radio" name="starting-player" value="human" checked>
+                    <span class="checkmark"></span>
+                    Human First (Black)
+                </label>
+                <label>
+                    <input type="radio" name="starting-player" value="ai">
+                    <span class="checkmark"></span>
+                    AI First (Black)
+                </label>
+            </div>
             <button id="reset-button">New Game</button>
             <p id="game-status">Your turn (Black)</p>
         </div>

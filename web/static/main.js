@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const GRID_SIZE = canvas.width;
 
     let board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(0));
-    let currentPlayer = 1; // 1 for black (human), -1 for white (AI)
+    let currentPlayer = 1; // 当前玩家 (1或-1)
+    let humanIsBlack = true; // 人类是否执黑
     let gameOver = false;
     let isProcessing = false; // 防止重复请求
 
@@ -44,7 +45,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     const y = CELL_SIZE * (i + 1);
                     ctx.beginPath();
                     ctx.arc(x, y, CELL_SIZE / 2.5, 0, 2 * Math.PI);
-                    ctx.fillStyle = board[i][j] === 1 ? 'black' : 'white';
+                    // 确定棋子颜色
+                    const isHumanPiece = (humanIsBlack && board[i][j] === 1) || (!humanIsBlack && board[i][j] === -1);
+                    ctx.fillStyle = isHumanPiece ? 'black' : 'white';
                     ctx.fill();
                     ctx.stroke();
                 }
@@ -75,8 +78,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         isProcessing = true;
         
+        // 确定玩家实际应该使用的值
+        const humanPlayerValue = humanIsBlack ? 1 : -1;
+        
         // 立即在界面上显示玩家的棋子
-        board[row][col] = currentPlayer;
+        board[row][col] = humanPlayerValue;
         drawPieces();
         updateStatus('AI is thinking...');
         
@@ -107,15 +113,29 @@ document.addEventListener('DOMContentLoaded', () => {
             // 更新整个棋盘状态
             updateBoard(data.board);
 
+            // 更新当前玩家
+            currentPlayer = data.current_player;
+            
             if (data.game_over) {
                 gameOver = true;
                 let winnerMsg = "Game Over! ";
-                if (data.winner === 1) winnerMsg += "You win!";
-                else if (data.winner === -1) winnerMsg += "AI wins!";
-                else winnerMsg += "It's a draw!";
+                if (data.winner === 1) {
+                    winnerMsg += humanIsBlack ? "You win!" : "AI wins!";
+                } else if (data.winner === -1) {
+                    winnerMsg += humanIsBlack ? "AI wins!" : "You win!";
+                } else {
+                    winnerMsg += "It's a draw!";
+                }
                 updateStatus(winnerMsg);
             } else {
-                updateStatus('Your turn (Black)');
+                // 根据当前玩家和人类是否执黑更新状态信息
+                currentPlayer = data.current_player;
+                const isHumanTurn = (humanIsBlack && currentPlayer === 1) || (!humanIsBlack && currentPlayer === -1);
+                if (isHumanTurn) {
+                    updateStatus('Your turn (Black)');
+                } else {
+                    updateStatus('AI is thinking...');
+                }
             }
 
         } catch (error) {
@@ -148,7 +168,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     resetButton.addEventListener('click', async () => {
         try {
-            const response = await fetch('/init', { method: 'GET' });
+            const startingPlayer = getStartingPlayer();
+            // 设置人类是否执黑
+            humanIsBlack = startingPlayer === 'human';
+            
+            const response = await fetch(`/init?starting_player=${startingPlayer}`, { method: 'GET' });
             const data = await response.json();
             
             // 更新棋盘
@@ -156,7 +180,13 @@ document.addEventListener('DOMContentLoaded', () => {
             currentPlayer = data.current_player;
             gameOver = false;
             isProcessing = false;
-            updateStatus('Your turn (Black)');
+            
+            // 更新状态
+            if (currentPlayer === 1) {
+                updateStatus(humanIsBlack ? 'Your turn (Black)' : 'AI is thinking...');
+            } else {
+                updateStatus(humanIsBlack ? 'AI is thinking...' : 'Your turn (Black)');
+            }
             canvas.style.pointerEvents = 'auto';
         } catch (error) {
             console.error('Error:', error);
@@ -165,10 +195,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
         // 初始化游戏
+    // 获取选中的先手方
+    function getStartingPlayer() {
+        const radios = document.getElementsByName('starting-player');
+        for (const radio of radios) {
+            if (radio.checked) {
+                return radio.value;
+            }
+        }
+        return 'human'; // 默认人类先手
+    }
+
     async function initGame() {
         try {
             console.log('Attempting to initialize game via /init');
-            const response = await fetch('/init', { method: 'GET' });
+            const startingPlayer = getStartingPlayer();
+            // 设置人类是否执黑
+            humanIsBlack = startingPlayer === 'human';
+            
+            const response = await fetch(`/init?starting_player=${startingPlayer}`, { method: 'GET' });
             
             const data = await response.json();  // 总是尝试解析 JSON
             
@@ -180,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             updateBoard(data.board);
             currentPlayer = data.current_player;
-            updateStatus('Your turn (Black)');
+            updateStatus(currentPlayer === 1 ? 'Your turn (Black)' : 'AI is thinking...');
         } catch (error) {
             console.error('Error initializing game:', error);
             updateStatus('Failed to initialize game: ' + (error.message || 'Unknown error'));
